@@ -7,24 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String?
   
-  // שימוש ב-Enum שהגדרנו למעלה
+  // השדה החדש שהוספנו
+  // אנחנו מגדירים אותו כ-String כי ה-Hash של Bcrypt הוא מחרוזת טקסט
+  password  String   
+  
   role      Role     @default(USER)
   
-  // שדות זמן מקצועיים
-  createdAt DateTime @default(now()) // זמן יצירת המשתמש
-  updatedAt DateTime @updatedAt      // עדכון אוטומטי בכל פעם שהמשתמש משתנה
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   posts     Post[]
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 model Post {
@@ -33,7 +35,6 @@ model Post {
   content   String?
   published Boolean  @default(false)
   
-  // גם לפוסטים כדאי להוסיף תיעוד זמן
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

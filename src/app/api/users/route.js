@@ -1,15 +1,15 @@
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
-import z, { email } from "zod";
+import { date, z } from "zod";
+import bcrypt from 'bcrypt'
 
 
 // 1. הגדרת חוקי הוולידציה (Zod)
-const userSchema = z.object({
-  name: z.string().min(2, "השם חייב להכיל לפחות 2 תווים"),
-  email: z.string().email("כתובת אימייל לא תקינה"),
-  password: z.string().min(8, "הסיסמה חייבת להכיל לפחות 8 תווים"),
-});
-
+const validationSchema = z.object({
+  email:z.string().email('איימיל לא תקין ') .lowercase() ,
+  name:z.string() .min(2) ,
+  password:z.string().min(2) 
+})
 
 export async function GET() {
     try {
@@ -26,6 +26,7 @@ export async function GET() {
         });
 
         // 2. החזרת סטטוס 200 בצורה מפורשת
+        
         return NextResponse.json(users, { status: 200 });
 
     } catch (error) {
@@ -49,64 +50,74 @@ export async function GET() {
 
 
 
-export async function POST(req) {
+
+
+
+export async function POST(_reg) {
+
   try {
-    // 2. קבלת הגוף של הבקשה (Body)
-    const body = await req.json();
+    const body = await _reg.json()
+    const validationUser = validationSchema.safeParse(body)
 
-    // 3. אימות הנתונים מול הסכמה
-    const validation = userSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { errors: validation.error.flatten().fieldErrors },
-        { status: 400 }
-      );
+    if(validationUser.error) {
+      return NextResponse.json(validationUser.error.flatten() .fieldErrors ,{status:401})
     }
 
-    const { name, email, password } = validation.data;
 
-    // 4. בדיקה האם האימייל כבר קיים במערכת (מניעת כפילות)
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const {email,password,name} =validationUser.data
 
-    if (existingUser) {
-      return NextResponse.json(
-        { message: "משתמש עם אימייל זה כבר קיים" },
-        { status: 409 } // 409 = Conflict
-      );
+    const checkEmail = await prisma.user.findUnique({
+      where:{email}
+    })
+
+    if(!checkEmail) {
+      return NextResponse.json({message:'האימייל כבר קיים במערכת'})
     }
 
-    // 5. הצפנת הסיסמה (Hashing)
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 6. יצירת המשתמש בבסיס הנתונים
+    const hashPassword = await bcrypt.hash(password , 10) 
+
     const newUser = await prisma.user.create({
-      data: {
+      data:{
         name,
-        email,
-        password: hashedPassword,
+        email ,
+        password:hashPassword
+        
       },
-      // מחזירים רק את השדות הנחוצים (בלי הסיסמה!)
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
-    });
 
-    // 7. תגובה מוצלחת
+      select:{
+        name:true ,
+        email:true ,
+        id:true ,
+        createdAt:true
+      }
+      
+    })
+
+
     return NextResponse.json(
-      { message: "המשתמש נוצר בהצלחה", user: newUser },
-      { status: 201 }
-    );
+      {message:'success create user ' ,  
 
+        date:newUser
+
+      } ,
+
+      {status:201}
+    )
+
+    
+
+
+    
   } catch (error) {
-    console.error("REGISTER_ERROR:", error);
-    return NextResponse.json(
-      { message: "שגיאת שרת פנימית" },
-      { status: 500 }
-    );
+    console.log({
+      message:'threr was error initrnal server'
+    } ,
+    {status:500}  
+    
+  )
+
+  return NextResponse.json({code:error})
   }
+
 }

@@ -49,16 +49,6 @@ export async function GET() {
 
 
 
-
-
-
-
-
-
-
-
-
-
 export async function POST(req) {
   try {
     // 2. קבלת הגוף של הבקשה (Body)

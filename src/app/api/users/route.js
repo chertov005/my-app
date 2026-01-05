@@ -49,56 +49,56 @@ export async function GET() {
 
 
 
-export async function POST(req) {
+// export async function POST(req) {
 
-    try {
+//     try {
 
-        const body = await req.json();
+//         const body = await req.json();
 
-        const userValidtion = userSchema.safeParse(body)
+//         const userValidtion = userSchema.safeParse(body)
 
-        if (!userValidtion.success) {
-            return NextResponse.json(userValidtion.error.format(), { status: 400 })
-        }
+//         if (!userValidtion.success) {
+//             return NextResponse.json(userValidtion.error.format(), { status: 400 })
+//         }
 
-        const { email, name } = userValidtion.data
+//         const { email, name } = userValidtion.data
 
-        const newUser = await prisma.user.create({
-            data: {
-                email,
-                name
-            },
+//         const newUser = await prisma.user.create({
+//             data: {
+//                 email,
+//                 name
+//             },
 
-            select: {
-                email: true,
-                name: true,
-                id: true
-            }
-        })
+//             select: {
+//                 email: true,
+//                 name: true,
+//                 id: true
+//             }
+//         })
 
-        return NextResponse.json(
-            {
-                message: 'success create user', // ההודעה שלך
-                data: newUser                  // הנתונים שחזרו מ-Prisma
-            },
-            {
-                status: 201                   // הסטטוס האמיתי של ה-HTTP
-            }
-        );
-
-
-    } catch (error) {
-        console.log(
-            { message: 'intrnatl server error 500' }
-        )
-
-        return NextResponse.json(
-            { error }
-        )
-    }
+//         return NextResponse.json(
+//             {
+//                 message: 'success create user', // ההודעה שלך
+//                 data: newUser                  // הנתונים שחזרו מ-Prisma
+//             },
+//             {
+//                 status: 201                   // הסטטוס האמיתי של ה-HTTP
+//             }
+//         );
 
 
-}
+//     } catch (error) {
+//         console.log(
+//             { message: 'intrnatl server error 500' }
+//         )
+
+//         return NextResponse.json(
+//             { error }
+//         )
+//     }
+
+
+// }
 
 
 

@@ -6,8 +6,8 @@ import bcrypt from 'bcrypt'
 
 // 1. הגדרת חוקי הוולידציה (Zod)
 const validationSchema = z.object({
-  email:z.string().email('איימיל לא תקין ') .lowercase() ,
-  name:z.string() .min(2) ,
+  email:z.string().email('איימיל לא תקין ') .lowercase() .trim(),
+  name:z.string() .min(2) .trim(),
   password:z.string().min(2) 
 })
 
@@ -70,7 +70,7 @@ export async function POST(_reg) {
       where:{email}
     })
 
-    if(!checkEmail) {
+    if(checkEmail) {
       return NextResponse.json({message:'האימייל כבר קיים במערכת'})
     }
 

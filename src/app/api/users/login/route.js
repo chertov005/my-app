@@ -9,6 +9,10 @@ const loginSchema = z.object({
   password: z.string().min(1, "חובה להזין סיסמה"),
 });
 
+
+
+
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -49,10 +53,19 @@ export async function POST(req) {
         name: user.name,
         email: user.email,
       },
-    }, { status: 200 });
-
+    }, { status: 200});
+ 
   } catch (error) {
     console.error("Login Error:", error);
     return NextResponse.json({ message: "שגיאת שרת פנימית" }, { status: 500 });
   }
 }
+
+
+
+
+
+
+
+
+

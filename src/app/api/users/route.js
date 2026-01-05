@@ -1,6 +1,6 @@
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
-import { date, z } from "zod";
+import { z } from "zod";
 import bcrypt from 'bcrypt'
 
 

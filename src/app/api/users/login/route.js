@@ -31,7 +31,7 @@ export async function POST(req) {
     });
 
     // אם המשתמש לא קיים
-    if (user) {
+    if (!user) {
       return NextResponse.json({ message: "אימייל או סיסמה שגויים" }, { status: 401 });
     }
 

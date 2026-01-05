@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 
 // 1. סכמה לאימות פרטי הלוגין
 const loginSchema = z.object({
-  email: z.string().email("אימייל לא תקין"),
+  email: z.string().email("אימייל לא תקין") .trim(),
   password: z.string().min(1, "חובה להזין סיסמה"),
 });
 
@@ -31,7 +31,7 @@ export async function POST(req) {
     });
 
     // אם המשתמש לא קיים
-    if (!user) {
+    if (user) {
       return NextResponse.json({ message: "אימייל או סיסמה שגויים" }, { status: 401 });
     }
 

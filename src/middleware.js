@@ -24,13 +24,21 @@ export async function middleware(request) {
     // הדפסה לדיבאגינג בטרמינל
     console.log("✅ User Authorized:", { userId, userEmail, userRole });
 
-    // 5. בדיקת הרשאות אדמין (כאן תיקנתי את השמות של request ו-userRole)
-    const isTryingToAccessAdmin = request.nextUrl.pathname.startsWith('/admin');
+    // --- הגנה על ה-API ---
+    // אם הנתיב הוא /api/users ומי שמנסה להיכנס הוא לא אדמין
+    // if (request.nextUrl.pathname.startsWith('/api/users/') && userRole !== 'admin') {
+    //   return NextResponse.json(
+    //     { message: 'גישה נדחתה: דרושות הרשאות מנהל' },
+    //     { status: 403 }
+    //   );
+    // }
+
+    // // --- הגנה על דפי ה-UI (Dashboard) ---
+    // if (request.nextUrl.pathname.startsWith('/admin') && userRole !== 'admin') {
+    //   return NextResponse.redirect(new URL('/login', request.url));
+    // }
+
     
-    if (isTryingToAccessAdmin && userRole !== 'admin') {
-      console.log("🚫 Access Denied: Not an admin");
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
 
     // 6. הכל תקין - המשך לדף המבוקש
     return NextResponse.next();
@@ -45,7 +53,13 @@ export async function middleware(request) {
 // 8. הגדרת הנתיבים (איחוד של שני ה-configs שרשמת)
 export const config = {
   matcher: [
-    // מגן על כל האתר חוץ מהקבצים הסטטיים ודפי התחברות
-    '/((?!api|_next/static|_next/image|favicon.ico|login|register).*)',
+    // // מגן על כל האתר חוץ מהקבצים הסטטיים ודפי התחברות
+    // '/((?!api|_next/static|_next/image|favicon.ico|login|register).*)',
+    // '/api/users/:path*',  // מגן על ה-API של המשתמשים
+    // '/dashboard/:path*',  // מגן על דפי ה-Dashboard
+    // '/api/users/((?!login|register).*)',
+    '/api/users',
+
+    
   ],
 };

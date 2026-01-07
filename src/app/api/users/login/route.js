@@ -2,7 +2,7 @@ import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcrypt";
-
+import jwt from "jsonwebtoken"
 // 1. סכמה לאימות פרטי הלוגין
 const loginSchema = z.object({
   email: z.string().email("אימייל לא תקין") .trim(),
@@ -46,14 +46,39 @@ export async function POST(req) {
 
     // 5. אם הכל תקין - המשתמש מחובר
     // כאן בדרך כלל יוצרים JWT או Session, אבל כרגע נחזיר הצלחה
-    return NextResponse.json({
-      message: "התחברת בהצלחה!",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    }, { status: 200});
+
+    // 1. הגדרת ה-Payload: מה נשמר בתוך הטוקן?
+    const payload = {
+      userId:user.id ,
+      userRole:user.role ,
+      userEmail:user.email
+
+    }
+
+    // 2. יצירת הטוקן (Signing)
+    const token = jwt.sign(payload , process.env.JWT_SECRET ,{expiresIn:"29d"})
+
+    ///שליחת הטוקן בעוגייה מאובטחת (HttpOnly Cookie
+    const response =  NextResponse.json(
+      {
+        message:'התחברות עבר בהצלחה ' 
+      }
+      
+    )
+
+    response.cookies.set({
+      name:'token' ,
+      value:token,
+      httpOnly:true ,
+      secure: process.env.NODE_ENV === "production",
+      sameSite:'strict' ,
+      maxAge:60 * 60 * 24 * 29 ,
+      path:'/'
+    }) ;
+
+    return response
+
+    
  
   } catch (error) {
     console.error("Login Error:", error);

@@ -113,6 +113,13 @@ export async function middleware(request) {
       },
     });
 
+
+
+
+
+
+    
+
   } catch (err) {
     console.error("JWT verification failed:", err.message);
     return NextResponse.redirect(new URL('/login', request.url));

@@ -128,7 +128,7 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    '/api/users/:path*',
+    '/api/users/:path*', '/api/users' ,
     '/api/posts/:path*', // הוספתי גם את זה כדי שתוכל ליצור פוסטים מוגנים
   ],
 };

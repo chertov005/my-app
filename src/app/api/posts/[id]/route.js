@@ -31,3 +31,42 @@ export async function GET(request, { params }) {
     return NextResponse.json({ message: "שגיאת שרת" }, { status: 500 });
   }
 }
+
+
+
+
+
+
+
+
+export async function DELETE(request, { params }) {
+  try {
+    const postId = Number(params.id); // ה-ID של הפוסט שרוצים למחוק
+
+    // 1. שליפת ה-ID שהזרקנו ב-Middleware
+    const userIdFromHeader = request.headers.get('x-user-id');
+    const currentUserId = Number(userIdFromHeader);
+
+    // 2. בדיקה בפריזמה: תמחק את הפוסט רק אם ה-ID שלו מתאים והוא שייך למשתמש
+    // זו הדרך הכי בטוחה!
+    const deletedPost = await prisma.post.deleteMany({
+      where: {
+        id: postId,
+        authorId: currentUserId, // כאן נכנס ה-authorId שדיברנו עליו!
+      },
+    });
+
+    // 3. בדיקה אם באמת נמחק משהו
+    if (deletedPost.count === 0) {
+      return NextResponse.json(
+        { message: "הפוסט לא נמצא או שאין לך הרשאה למחוק אותו" },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json({ message: "הפוסט נמחק בהצלחה" });
+
+  } catch (error) {
+    return NextResponse.json({ message: "שגיאת שרת" }, { status: 500 });
+  }
+}

@@ -14,8 +14,9 @@ const contactSchema = z.object({
 export async function POST(req) {
   try {
     // 1. חילוץ ה-IP בעזרת headers() של Next.js
-    const headerList = headers();
+    const headerList = await headers();
     const ip = headerList.get('x-forwarded-for') || "0.0.0.0"; 
+    // const ip - req.headers.get('x-forwarded-for') // אפשר גם ככה 
     // הוספתי .split(',')[0] כי לפעמים ב-Production יש רשימה של כתובות IP, ואנחנו רוצים את הראשונה (של המשתמש)
 
     // 2. קריאת גוף הבקשה
@@ -34,7 +35,7 @@ export async function POST(req) {
     const {content,email,name,title} = validation.data
 
     // 4. שמירה בבסיס הנתונים (Prisma)
-    const newMessage = await prisma.contact.create({
+        const newMessage = await prisma.contact.create({
       data: {
         name,
         email,
@@ -60,3 +61,10 @@ export async function POST(req) {
     );
   }
 }
+
+
+
+
+
+
+

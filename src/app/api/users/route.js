@@ -1,4 +1,5 @@
 import prisma from "@/lib/db";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 // ... שאר ה-imports (zod, bcrypt)
 
@@ -7,7 +8,9 @@ export async function GET(request) { // אל תשכח להוסיף את request 
       
 
         // שולף את המידע של role מבקשת headers
-        const userRole = request.headers.get('x-user-role');
+        const headerList = await headers()
+        const userRole = headerList.get('x-user-role');
+        // const userRole = request.headers.get('x-user-role');
 
         if (userRole !== 'ADMIN') {
             return NextResponse.json(

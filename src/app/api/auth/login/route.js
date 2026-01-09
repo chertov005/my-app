@@ -51,7 +51,9 @@ export async function POST(req) {
     const payload = {
       userId:user.id ,
       userRole:user.role ,
-      userEmail:user.email
+      userEmail:user.email ,
+      userName:user.name
+      
 
     }
 

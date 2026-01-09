@@ -1,46 +1,81 @@
-import prisma from "@/lib/db";
-import { NextResponse } from "next/server";
 
-export async function POST(request) {
+
+
+
+import prisma from "@/lib/db"; // חיבור לבסיס הנתונים דרך Prisma Client
+import { NextResponse } from "next/server"; // כלי של Next.js להחזרת תשובות HTTP (JSON, סטטוסים וכו')
+import { z } from 'zod'; // ספרייה לאימות (Validation) של מבנה הנתונים
+
+// 1. הגדרת ה"חוזה" (Schema) - אילו נתונים אנחנו מוכנים לקבל מהמשתמש
+const postsSchema = z.object({
+  // הכותרת חייבת להיות טקסט, מינימום 3 תווים, וללא רווחים מיותרים בקצוות
+  title: z.string().min(3, 'כותרת קצרה מדי').trim(),
+  // התוכן חייב להיות טקסט, מינימום 10 תווים
+  content: z.string().min(10, 'התוכן קצר מדי, מינימום 10 תווים').trim()
+});
+
+export async function POST(_req) {
   try {
-    // 1. שליפת ה-ID של המשתמש מה-Headers (שה-Middleware הזריק)
-    const userId = request.headers.get('x-user-id');
+    // 2. חילוץ המידע מהבקשה
+    const body = await _req.json(); // הפיכת גוף הבקשה (JSON) לאובייקט JS
+    const userId = _req.headers.get('x-user-id'); // שליפת ה-ID שהוזרק על ידי ה-Middleware מהטוקן
 
-    // אם מסיבה כלשהי אין ID (למשל הנתיב לא ב-matcher), נחזיר שגיאה
+    // 3. שכבת הגנה ראשונה: אימות זהות (Authentication)
+    // אם אין userId ב-Headers, זה אומר שהמשתמש לא מחובר או שהטוקן לא תקין
     if (!userId) {
-      return NextResponse.json({ message: "משתמש לא מזוהה" }, { status: 401 });
+      console.log('access denied'); 
+      return NextResponse.json(
+        { message: 'גישה נדחתה. רק למשתמש רשום' }, 
+        { status: 401 } // 401 Unauthorized
+      );
     }
 
-    // 2. קבלת נתוני הפוסט מהגוף של הבקשה (body)
-    const body = await request.json();
-    const { title, content } = body;
+    // 4. שכבת הגנה שנייה: אימות נתונים (Validation)
+    // בדיקה האם ה-body ששלח המשתמש תואם לחוקים שהגדרנו ב-Schema
+    const validation = postsSchema.safeParse(body); 
 
-    // וולידציה בסיסית (אפשר גם עם Zod אם תרצה)
-    if (!title || !content) {
-      return NextResponse.json({ message: "כותרת ותוכן הם שדות חובה" }, { status: 400 });
+    // אם האימות נכשל, נחזיר למשתמש פירוט של השגיאות (למשל: "כותרת קצרה מדי")
+    if (!validation.success) {
+      return NextResponse.json(
+        validation.error.flatten().fieldErrors, // הופך את השגיאה למבנה פשוט שקל להצnpיג ב-React
+        { status: 400 } // 400 Bad Request
+      );
     }
 
-    // 3. יצירת הפוסט בבסיס הנתונים בעזרת Prisma
-    const newPost = await prisma.post.create({
+    // חילוץ הנתונים הנקיים לאחר האימות
+    const { content, title } = validation.data;
+
+    // 5. עבודה מול בסיס הנתונים (Database)
+    const userPosts = await prisma.post.create({
       data: {
-        title,
         content,
-        // אנחנו הופכים את ה-ID למספר אם ב-Prisma הוא מוגדר כ-Int
-        authorId: Number(userId), 
+        title,
+        authorId: Number(userId), // קישור הפוסט למשתמש (המרה למספר לטובת ה-DB)
       },
+      // הגדרה מה בדיוק יחזור אלינו מפריזמה לאחר היצירה
+      select: {
+        author: false, // מביא את פרטי הכותב (שם, אימייל וכו')
+        authorId: true,
+        title: true,
+        content: true
+      }
     });
 
-    // 4. החזרת תשובה חיובית
+    // 6. תגובת הצלחה
     return NextResponse.json(
-      { message: "הפוסט נוצר בהצלחה!", data: newPost },
-      { status: 201 }
+      {
+        message: 'success post',
+        data: userPosts 
+      }, 
+      { status: 201 } // 201 Created - הסטטוס התקני ליצירת משאב חדש
     );
-
+    
   } catch (error) {
-    console.error("Post Creation Error:", error);
+    // 7. טיפול בשגיאות בלתי צפויות (שרת קרס, DB לא זמין וכו')
+    console.error("Error:", error);
     return NextResponse.json(
-      { message: "שגיאת שרת פנימית", error: error.message },
-      { status: 500 }
+      { message: 'internal server error 500' },
+      { status: 500 } // 500 Internal Server Error
     );
   }
 }

@@ -18,9 +18,9 @@ export async function middleware(request) {
     const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secretKey);
 
-    const { userId, userRole, userEmail } = payload;
+    const { userId, userRole, userName } = payload;
 
-    console.log("✅ User Authorized:", { userId, userEmail, userRole });
+    console.log("✅ User Authorized:", { userId, userRole , userName});
 
     // // בדיקת הרשאות אדמין
     // if (pathname.startsWith('/api/users') && userRole !== 'ADMIN') {
@@ -35,6 +35,7 @@ export async function middleware(request) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-user-id', userId);
     requestHeaders.set('x-user-role' ,userRole) ;
+    requestHeaders.set('x-user-name' ,userName) ;
 
     // המשך עם ה-Headers החדשים
     return NextResponse.next({

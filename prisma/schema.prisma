@@ -41,3 +41,38 @@ model Post {
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
 }
+
+
+
+model Contact {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(100)
+  email       String        @db.VarChar(255)
+  title       String        @db.VarChar(200)
+  content     String        @db.Text
+  
+  // שדות ניהול (Admin Fields)
+  status      ContactStatus @default(PENDING) // מעקב: האם טיפלת כבר בפנייה?
+  priority    Priority      @default(LOW)     // סיווג: כמה דחוף זה?
+  ipAddress   String?                         // הגנה: למניעת ספאם (בוטים)
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt      // מתי עדכנת את הסטטוס לאחרונה?
+
+  @@index([email]) // אופטימיזציה: חיפוש מהיר לפי אימייל במערכת הניהול
+}
+
+// הגדרת רשימות בחירה (Enums)
+enum ContactStatus {
+  PENDING    // ממתין לטיפול
+  IN_PROGRESS // בטיפול
+  COMPLETED   // טופל
+  SPAM        // ספאם
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
